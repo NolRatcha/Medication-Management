@@ -3,8 +3,8 @@ fastapi
 uvicorn[standard]
 
 sqlalchemy
-pymysql
-aiomysql
+asyncpg
+psycopg2-binary
 
 motor
 beanie
