@@ -1,0 +1,93 @@
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from motor.motor_asyncio import AsyncIOMotorClient
+from beanie import init_beanie
+
+# ==========================================
+# 1. ส่วนนำเข้า Models และ Routers ของเพื่อนในทีม
+# (เอาคอมเมนต์ออกเมื่อเพื่อนเขียนไฟล์เสร็จแล้ว)
+# ==========================================
+# นำเข้า MongoDB Models 
+# from models.mongodb import Authority, MedInfo, PatientHist, EventLog 
+
+# นำเข้า MySQL Models และ Engine (SQLAlchemy)
+# from models.mysql import engine, Base
+
+# นำเข้า API Routes ของแต่ละคน
+# from routers import patient_router, inventory_router, staff_router
+
+
+# ==========================================
+# 2. การเชื่อมต่อฐานข้อมูลตอนเปิด/ปิด Server
+# ==========================================
+MONGO_URL = "mongodb://admin:adminpassword@localhost:27017"
+MONGO_DB_NAME = "clinic_db_mongo"
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # --- ทำงานตอนเริ่ม Server (Startup) ---
+    print("🚀 Starting up... Connecting to databases.")
+    
+    # เชื่อมต่อ MongoDB ด้วย Motor และ Beanie
+    client = AsyncIOMotorClient(MONGO_URL)
+    # await init_beanie(database=client, document_models=[Authority, MedInfo, PatientHist, EventLog])
+    print("✅ MongoDB Connected!")
+    
+    # เชื่อมต่อ MySQL ด้วย SQLAlchemy
+    # Base.metadata.create_all(bind=engine)
+    print("✅ MySQL Connected!")
+    
+    yield # ปล่อยให้ Server ทำงาน
+    
+    # --- ทำงานตอนปิด Server (Shutdown) ---
+    print("🛑 Shutting down... Closing connections.")
+    client.close()
+
+# ==========================================
+# 3. สร้างแอปพลิเคชัน FastAPI
+# ==========================================
+app = FastAPI(
+    title="Clinic Management API",
+    description="API สำหรับระบบจัดการคลินิก (MySQL + MongoDB)",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# ==========================================
+# 4. ตั้งค่า CORS (สำคัญมากสำหรับ React)
+# ==========================================
+origins = [
+    "http://localhost:5173",
+    "https://my-clinic-project.vercel.app" # โดเมนจริงของหน้าเว็บ
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # อนุญาตทุก Method (GET, POST, PUT, DELETE)
+    allow_headers=["*"], # อนุญาตทุก Header
+)
+
+# ==========================================
+# 5. ประกอบ API ของเพื่อนๆ แต่ละคนเข้ากับโครงหลัก
+# (เอาคอมเมนต์ออกเมื่อเพื่อนเขียนไฟล์เสร็จแล้ว)
+# ==========================================
+# คนที่ 1: ระบบผู้ป่วย
+# app.include_router(patient_router.router, prefix="/api/v1/patients", tags=["Patients"])
+
+# คนที่ 2: ระบบคลังยา
+# app.include_router(inventory_router.router, prefix="/api/v1/inventory", tags=["Inventory"])
+
+# คนที่ 3: ระบบพนักงานและ Log
+# app.include_router(staff_router.router, prefix="/api/v1/staff", tags=)
+
+# API ทดสอบเบื้องต้น
+@app.get("/")
+def read_root():
+    return {"status": "success", "message": "Backend is running with MySQL & MongoDB ready!"}
+
+if __name__ == "__main__":
+    import uvicorn
+    # สั่งรันเซิร์ฟเวอร์ที่พอร์ต 8000
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
