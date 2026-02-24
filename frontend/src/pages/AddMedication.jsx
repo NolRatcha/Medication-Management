@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
 const API = "http://localhost:8000/api/v1/inventory";
 
