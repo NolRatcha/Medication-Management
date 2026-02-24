@@ -5,24 +5,11 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 
 # ==========================================
-# 1. ส่วนนำเข้า Models และ Routers ของเพื่อนในทีม
-# (เอาคอมเมนต์ออกเมื่อเพื่อนเขียนไฟล์เสร็จแล้ว)
-# ==========================================
-# นำเข้า MongoDB Models 
-# from models.mongodb import Authority, MedInfo, PatientHist, EventLog 
-
-# นำเข้า MySQL Models และ Engine (SQLAlchemy)
-# from models.mysql import engine, Base
-
-# นำเข้า API Routes ของแต่ละคน
-# from routers import patient_router, inventory_router, staff_router
-
-
-# ==========================================
 # 2. การเชื่อมต่อฐานข้อมูลตอนเปิด/ปิด Server
 # ==========================================
 MONGO_URL = "mongodb://admin:adminpassword@localhost:27017"
 MONGO_DB_NAME = "clinic_db_mongo"
+POSTGRES_URL = "postgresql://user:password@localhost:5432/clinic_db"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,10 +21,10 @@ async def lifespan(app: FastAPI):
     # await init_beanie(database=client, document_models=[Authority, MedInfo, PatientHist, EventLog])
     print("✅ MongoDB Connected!")
     
-    # เชื่อมต่อ MySQL ด้วย SQLAlchemy
+    # เชื่อมต่อ PostgreSQL ด้วย SQLAlchemy
     # Base.metadata.create_all(bind=engine)
-    print("✅ MySQL Connected!")
-    
+    print("✅ PostgreSQL Connected!")
+
     yield # ปล่อยให้ Server ทำงาน
     
     # --- ทำงานตอนปิด Server (Shutdown) ---
