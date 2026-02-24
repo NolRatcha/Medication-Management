@@ -72,8 +72,7 @@ app.add_middleware(
 # API ทดสอบเบื้องต้น
 @app.get("/")
 def read_root():
-    return {"status": "success", "message": "Backend is running with MySQL & MongoDB ready!"}
-
+    return {"status": "success", "message": "Backend is running with PostgreSQL & MongoDB ready!"}
 if __name__ == "__main__":
     import uvicorn
     # สั่งรันเซิร์ฟเวอร์ที่พอร์ต 8000
