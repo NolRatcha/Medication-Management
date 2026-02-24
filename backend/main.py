@@ -3,6 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
+from database import engine, Base, connect_mongodb, disconnect_mongodb
+from models.med_info_mongo_model import MedInfo
+from routers import inventory_router
 
 # ==========================================
 # 2. การเชื่อมต่อฐานข้อมูลตอนเปิด/ปิด Server
@@ -17,9 +20,10 @@ async def lifespan(app: FastAPI):
     print("🚀 Starting up... Connecting to databases.")
     
     # เชื่อมต่อ MongoDB ด้วย Motor และ Beanie
-    client = AsyncIOMotorClient(MONGO_URL)
-    # await init_beanie(database=client, document_models=[Authority, MedInfo, PatientHist, EventLog])
-    print("✅ MongoDB Connected!")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    print("✅ PostgreSQL Connected & Tables Ready!")
+    await connect_mongodb(document_models=[MedInfo])
     
     # เชื่อมต่อ PostgreSQL ด้วย SQLAlchemy
     # Base.metadata.create_all(bind=engine)
@@ -64,7 +68,7 @@ app.add_middleware(
 # app.include_router(patient_router.router, prefix="/api/v1/patients", tags=["Patients"])
 
 # คนที่ 2: ระบบคลังยา
-# app.include_router(inventory_router.router, prefix="/api/v1/inventory", tags=["Inventory"])
+app.include_router(inventory_router.router, prefix="/api/v1/inventory", tags=["Inventory"])
 
 # คนที่ 3: ระบบพนักงานและ Log
 # app.include_router(staff_router.router, prefix="/api/v1/staff", tags=)
