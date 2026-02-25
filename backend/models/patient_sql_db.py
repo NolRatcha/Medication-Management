@@ -22,4 +22,3 @@ class Treatment(Base):
     date = Column(Date, nullable=False)
 
     patient = relationship("Patient", back_populates="treatments")
-    medication = relationship("Medication", back_populates="treatments")
