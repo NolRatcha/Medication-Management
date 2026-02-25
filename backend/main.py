@@ -5,6 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from database import engine, Base, connect_mongodb, disconnect_mongodb
 from models.med_info_mongo_model import MedInfo
+from models.staff_mongo_db import StaffAuth, EventLog
 from routers import inventory_router
 
 # ==========================================
@@ -13,6 +14,8 @@ from routers import inventory_router
 MONGO_URL = "mongodb://admin:adminpassword@localhost:27017"
 MONGO_DB_NAME = "clinic_db_mongo"
 POSTGRES_URL = "postgresql://user:password@localhost:5432/clinic_db"
+
+MONGO_MODELS = [MedInfo, StaffAuth, EventLog]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,7 +26,7 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     print("✅ PostgreSQL Connected & Tables Ready!")
-    await connect_mongodb(document_models=[MedInfo])
+    await connect_mongodb(document_models=MONGO_MODELS)
     
     # เชื่อมต่อ PostgreSQL ด้วย SQLAlchemy
     # Base.metadata.create_all(bind=engine)
@@ -33,7 +36,6 @@ async def lifespan(app: FastAPI):
     
     # --- ทำงานตอนปิด Server (Shutdown) ---
     print("🛑 Shutting down... Closing connections.")
-    client.close()
 
 # ==========================================
 # 3. สร้างแอปพลิเคชัน FastAPI
