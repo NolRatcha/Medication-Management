@@ -7,6 +7,7 @@ import AddMedInfo from './pages/AddMedInfo';
 import ViewMedications from './pages/ViewMedications';
 import StaffPage from './pages/Staff';
 import PatientPage from './pages/Patiens';
+import PatientDetailPage from './pages/PatientDetailPage';
 
 
 const navLinks = [
@@ -48,6 +49,7 @@ function App() {
           <Routes>
             <Route path="/" element={<h1 style={{ padding: "40px" }}>Welcome to Clinic Management System</h1>} />
             <Route path="/patients" element={<PatientPage />} />
+            <Route path="/patients/:id" element={<PatientDetailPage />} />
             <Route path="/inventory/add-medication" element={<AddMedication />} />
             <Route path="/inventory/add-stock" element={<AddStock />} />
             <Route path="/inventory/add-medinfo" element={<AddMedInfo />} />

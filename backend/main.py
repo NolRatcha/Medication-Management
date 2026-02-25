@@ -6,6 +6,7 @@ from beanie import init_beanie
 from database import engine, Base, connect_mongodb, disconnect_mongodb
 from models.med_info_mongo_model import MedInfo
 from models.staff_mongo_db import StaffAuth, EventLog
+from models.patient_mongo_db import Patient_hist
 from routers import inventory_router, patients_router
 
 # ==========================================
@@ -15,7 +16,7 @@ MONGO_URL = "mongodb://admin:adminpassword@localhost:27017"
 MONGO_DB_NAME = "clinic_db_mongo"
 POSTGRES_URL = "postgresql://user:password@localhost:5432/clinic_db"
 
-MONGO_MODELS = [MedInfo, StaffAuth, EventLog]
+MONGO_MODELS = [MedInfo, StaffAuth, EventLog, Patient_hist]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

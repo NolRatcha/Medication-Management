@@ -4,10 +4,16 @@ import React, { useState } from 'react';
 export default function PatientForm({ onAddSuccess }) {
   const [formData, setFormData] = useState({ name: '', age: '', gender: 'Male' });
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const showMessage = (text, type) => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage({ text: '', type: '' }), 3000); // หายไปหลังจาก 3 วินาที
   };
 
   const handleSubmit = async (e) => {
@@ -22,14 +28,14 @@ export default function PatientForm({ onAddSuccess }) {
       });
 
       if (response.ok) {
-        alert('เพิ่มผู้ป่วยสำเร็จ!');
+        showMessage('✅ เพิ่มผู้ป่วยสำเร็จ!', 'success');
         setFormData({ name: '', age: '', gender: 'Male' }); // ล้างฟอร์ม
         onAddSuccess(); // เรียกฟังก์ชันที่แม่ส่งมาให้ เพื่อโหลดตารางใหม่
       } else {
-        alert('เกิดข้อผิดพลาดในการบันทึก');
+        showMessage(`❌ เกิดข้อผิดพลาด: ${JSON.stringify(errorData)}`, 'error');
       }
     } catch (error) {
-      console.error(error);
+      showMessage('❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
     } finally {
       setLoading(false);
     }
