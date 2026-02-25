@@ -6,8 +6,8 @@ import AddStock from './pages/AddStock';
 import AddMedInfo from './pages/AddMedInfo';
 import ViewMedications from './pages/ViewMedications';
 import StaffPage from './pages/Staff';
+import PatientPage from './pages/Patiens';
 
-const PatientPage = () => <div style={{ padding: "40px" }}>PatientPage — Coming Soon</div>;
 
 const navLinks = [
   { to: "/", label: "Home" },

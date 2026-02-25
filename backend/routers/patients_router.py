@@ -81,7 +81,7 @@ async def get_patient(p_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.post("/", response_model=PatientResponse, status_code=status.HTTP_201_CREATED)
 async def create_patient(body: PatientCreate, db: AsyncSession = Depends(get_db)):
-    patient = Patient(name=body.name, insurance_id=body.insurance_id)
+    patient = Patient(name=body.name, age=body.age, gender=body.gender)
     db.add(patient)
     await db.commit()
     await db.refresh(patient)
