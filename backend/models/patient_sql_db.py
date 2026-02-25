@@ -7,7 +7,9 @@ class Patient(Base):
 
     p_id = Column(BigInteger, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False)
-    insurance_id = Column(String(100), nullable=True)
+    age = Column(BigInteger, nullable=False) 
+    gender = Column(String(100), nullable=False) 
+    
 
     treatments = relationship("Treatment", back_populates="patient")
 

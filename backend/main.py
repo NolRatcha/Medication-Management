@@ -6,7 +6,7 @@ from beanie import init_beanie
 from database import engine, Base, connect_mongodb, disconnect_mongodb
 from models.med_info_mongo_model import MedInfo
 from models.staff_mongo_db import StaffAuth, EventLog
-from routers import inventory_router
+from routers import inventory_router, patients_router
 
 # ==========================================
 # 2. การเชื่อมต่อฐานข้อมูลตอนเปิด/ปิด Server
@@ -69,7 +69,7 @@ app.add_middleware(
 # (เอาคอมเมนต์ออกเมื่อเพื่อนเขียนไฟล์เสร็จแล้ว)
 # ==========================================
 # คนที่ 1: ระบบผู้ป่วย
-# app.include_router(patient_router.router, prefix="/api/v1/patients", tags=["Patients"])
+app.include_router(patients_router.router, prefix="/api/v1/patients", tags=["Patients"])
 
 # คนที่ 2: ระบบคลังยา
 app.include_router(inventory_router.router, prefix="/api/v1/inventory", tags=["Inventory"])
