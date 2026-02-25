@@ -36,6 +36,8 @@ async def lifespan(app: FastAPI):
     
     # --- ทำงานตอนปิด Server (Shutdown) ---
     print("🛑 Shutting down... Closing connections.")
+    await disconnect_mongodb()
+    print("Shutdown complete!")
 
 # ==========================================
 # 3. สร้างแอปพลิเคชัน FastAPI
