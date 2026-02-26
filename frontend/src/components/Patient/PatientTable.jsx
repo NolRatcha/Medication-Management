@@ -25,10 +25,10 @@ export default function PatientTable({ patients, onSelectForHistory }) {
                   <td style={styles.td}>{p.age}</td>
                   <td style={styles.td}>{p.gender}</td>
                   <td style={styles.tdAction}>
-                    <button onClick={() => onSelectForHistory(p)} style={styles.historyBtn}>
+                    {/* <button onClick={() => onSelectForHistory(p)} style={styles.historyBtn}>
                       Add Record
-                    </button>
-                    <Link to={`/patients/${p.p_id}`} style={styles.actionBtn}>
+                    </button> */}
+                    <Link to={`/patients/${p.p_id}`} style={styles.historyBtn}>
                       View Profile
                     </Link>
                   </td>
@@ -54,6 +54,6 @@ const styles = {
   td: { padding: '15px 20px', fontSize: '14px', color: '#475569' },
   tdAction: { padding: '15px 20px', textAlign: 'right', whiteSpace: 'nowrap' },
   actionBtn: { padding: '8px 14px', background: '#fff', color: '#1e3a8a', textDecoration: 'none', border: '1px solid #1e3a8a', borderRadius: '4px', fontSize: '13px', marginLeft: '8px', fontWeight: 'bold', display: 'inline-block' },
-  historyBtn: { padding: '8px 14px', background: '#1e3a8a', color: 'white', border: 'none', borderRadius: '4px', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold', display: 'inline-block' },
+  historyBtn: { padding: '8px 14px', background: '#1e3a8a', color: 'white', border: 'none', borderRadius: '4px', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold', display: 'inline-block', textDecoration: 'none' },
   emptyState: { textAlign: 'center', padding: '40px 20px', color: '#94a3b8', fontSize: '14px' }
 };

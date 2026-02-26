@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import TreatmentSection from '../components/Patient/TreatmentSection';
 
 export default function PatientDetailPage() {
   const { id } = useParams();
@@ -193,6 +194,7 @@ export default function PatientDetailPage() {
           )}
         </div>
       </div>
+      <TreatmentSection patient={patient} />
     </div>
   );
 }
