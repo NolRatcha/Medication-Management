@@ -1,13 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, field_validator
+from typing import Optional, List
 from datetime import date
 
 from database import get_db
 from models.patient_sql_db import Patient, Treatment
 from models.patient_mongo_db import Patient_hist
+
+# ==========================================
+# Helpers
+# ==========================================
+
+def parse_csv(value: Optional[str]) -> Optional[List[str]]:
+    """Split a comma-separated string into a cleaned list, or return None."""
+    if value is None:
+        return None
+    return [item.strip() for item in value.split(",") if item.strip()]
 
 # ==========================================
 # Pydantic Schemas
@@ -49,9 +59,16 @@ class TreatmentResponse(BaseModel):
 
 class PatientHistCreate(BaseModel):
     history: Optional[str] = None
-    diagnosis: Optional[str] = None
-    medication: Optional[str] = None
-    allergies: Optional[str] = None
+    diagnosis: Optional[str] = None   # e.g. "Diabetes, Hypertension"
+    medication: Optional[str] = None  # e.g. "Metformin, Amlodipine"
+    allergies: Optional[str] = None   # e.g. "Penicillin, Aspirin"
+
+class PatientHistResponse(BaseModel):
+    p_id: int
+    history: Optional[str] = None
+    diagnosis: Optional[List[str]] = None
+    medication: Optional[List[str]] = None
+    allergies: Optional[List[str]] = None
 
 # ==========================================
 # Router
@@ -97,8 +114,10 @@ async def update_patient(p_id: int, body: PatientUpdate, db: AsyncSession = Depe
 
     if body.name is not None:
         patient.name = body.name
-    if body.insurance_id is not None:
-        patient.insurance_id = body.insurance_id
+    if body.age is not None:
+        patient.age = body.age
+    if body.gender is not None:
+        patient.gender = body.gender
 
     await db.commit()
     await db.refresh(patient)
@@ -128,7 +147,6 @@ async def get_treatments(p_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.post("/{p_id}/treatments", response_model=TreatmentResponse, status_code=status.HTTP_201_CREATED)
 async def add_treatment(p_id: int, body: TreatmentCreate, db: AsyncSession = Depends(get_db)):
-    # Verify patient exists
     result = await db.execute(select(Patient).where(Patient.p_id == p_id))
     if not result.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found")
@@ -143,7 +161,7 @@ async def add_treatment(p_id: int, body: TreatmentCreate, db: AsyncSession = Dep
 # Patient History (MongoDB via Beanie)
 # ------------------------------------------
 
-@router.get("/{p_id}/history")
+@router.get("/{p_id}/history", response_model=PatientHistResponse)
 async def get_patient_history(p_id: int):
     hist = await Patient_hist.find_one(Patient_hist.p_id == p_id)
     if not hist:
@@ -151,29 +169,43 @@ async def get_patient_history(p_id: int):
     return hist
 
 
-@router.post("/{p_id}/history", status_code=status.HTTP_201_CREATED)
+@router.post("/{p_id}/history", response_model=PatientHistResponse, status_code=status.HTTP_201_CREATED)
 async def create_patient_history(p_id: int, body: PatientHistCreate):
     existing = await Patient_hist.find_one(Patient_hist.p_id == p_id)
     if existing:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="History already exists, use PUT to update")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="History already exists, use PUT to update"
+        )
 
     hist = Patient_hist(
         p_id=p_id,
         history=body.history,
-        diagnosis=body.diagnosis,
-        medication=body.medication,
-        allergies=body.allergies,
+        diagnosis=parse_csv(body.diagnosis),
+        medication=parse_csv(body.medication),
+        allergies=parse_csv(body.allergies),
     )
     await hist.insert()
     return hist
 
 
-@router.put("/{p_id}/history")
+@router.put("/{p_id}/history", response_model=PatientHistResponse)
 async def update_patient_history(p_id: int, body: PatientHistCreate):
     hist = await Patient_hist.find_one(Patient_hist.p_id == p_id)
     if not hist:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Patient history not found")
 
-    update_data = body.model_dump(exclude_none=True)
-    await hist.set(update_data)
+    update_data: dict = {}
+    if body.history is not None:
+        update_data["history"] = body.history
+    if body.diagnosis is not None:
+        update_data["diagnosis"] = parse_csv(body.diagnosis)
+    if body.medication is not None:
+        update_data["medication"] = parse_csv(body.medication)
+    if body.allergies is not None:
+        update_data["allergies"] = parse_csv(body.allergies)
+
+    if update_data:
+        await hist.set(update_data)
+
     return hist
