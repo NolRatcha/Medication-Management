@@ -9,7 +9,7 @@ export default function PatientHistoryForm({ patient, onSuccess, onCancel }) {
 
   const showMessage = (text, type) => {
     setMessage({ text, type });
-    setTimeout(() => setMessage({ text: '', type: '' }), 3000); // หายไปหลังจาก 3 วินาที
+    setTimeout(() => setMessage({ text: '', type: '' }), 4000); 
   };
 
   const handleInputChange = (e) => {
@@ -22,7 +22,6 @@ export default function PatientHistoryForm({ patient, onSuccess, onCancel }) {
     setLoading(true);
 
     try {
-      // ยิง API ไปที่ MongoDB (ตาม Router ที่คุณเขียนไว้)
       const response = await fetch(`http://localhost:8000/api/v1/patients/${patient.p_id}/history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -30,16 +29,16 @@ export default function PatientHistoryForm({ patient, onSuccess, onCancel }) {
       });
 
       if (response.ok) {
-        showMessage('✅ บันทึกประวัติลง MongoDB สำเร็จ!', 'success');
-        onSuccess(); // สั่งให้หน้าหลักปิดฟอร์มนี้
+        showMessage('Medical record created successfully.', 'success');
+        onSuccess();
       } else if (response.status === 409) {
-        showMessage('❌ ผู้ป่วยคนนี้มีประวัติอยู่แล้วครับ (API แจ้งว่าต้องใช้ PUT เพื่อแก้ไข)', 'error');
+        showMessage('Record already exists for this patient. Please update via the Patient Profile page.', 'error');
       } else {
         const errorData = await response.json();
-        showMessage(`❌ เกิดข้อผิดพลาด: ${JSON.stringify(errorData)}`, 'error');
+        showMessage(`System error: ${JSON.stringify(errorData)}`, 'error');
       }
     } catch (error) {
-      showMessage('❌ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+      showMessage('Unable to connect to the server.', 'error');
     } finally {
       setLoading(false);
     }
@@ -47,31 +46,47 @@ export default function PatientHistoryForm({ patient, onSuccess, onCancel }) {
 
   return (
     <div style={styles.modalCard}>
-      <h3 style={{ color: '#0369a1', marginTop: 0 }}>
-        📝 เพิ่มประวัติการรักษา: {patient.name} (HN-{patient.p_id})
-      </h3>
+      <div style={styles.header}>
+        <h3 style={styles.title}>
+          New Medical Record Entry
+        </h3>
+        <p style={styles.subtitle}>Patient: {patient.name} (HN-{patient.p_id})</p>
+      </div>
+
       {message.text && (
         <div style={{
           ...styles.notification,
-          backgroundColor: message.type === 'success' ? '#dcfce7' : '#fee2e2',
-          color: message.type === 'success' ? '#166534' : '#991b1b',
-          border: `1px solid ${message.type === 'success' ? '#bbf7d0' : '#fecaca'}`
+          backgroundColor: message.type === 'success' ? '#edf7ed' : '#fdeded',
+          color: message.type === 'success' ? '#1e4620' : '#5f2120',
+          border: `1px solid ${message.type === 'success' ? '#c8e6c9' : '#ffcdd2'}`
         }}>
           {message.text}
         </div>
       )}
       <form onSubmit={handleSubmit} style={styles.form}>
-        <textarea name="history" placeholder="ประวัติผู้ป่วย (History)" value={formData.history} onChange={handleInputChange} style={styles.textarea} />
-        <input type="text" name="diagnosis" placeholder="การวินิจฉัย (Diagnosis)" value={formData.diagnosis} onChange={handleInputChange} style={styles.input} />
-        <input type="text" name="medication" placeholder="ยาที่ใช้ประจำ (Medication)" value={formData.medication} onChange={handleInputChange} style={styles.input} />
-        <input type="text" name="allergies" placeholder="ประวัติแพ้ยา (Allergies)" value={formData.allergies} onChange={handleInputChange} style={styles.input} />
+        <div style={styles.fullWidth}>
+            <label style={styles.label}>Clinical History</label>
+            <textarea name="history" placeholder="Enter patient's history" value={formData.history} onChange={handleInputChange} style={styles.textarea} />
+        </div>
+        <div style={styles.inputContainer}>
+            <label style={styles.label}>Diagnosis</label>
+            <input type="text" name="diagnosis" placeholder="Current diagnosis" value={formData.diagnosis} onChange={handleInputChange} style={styles.input} />
+        </div>
+        <div style={styles.inputContainer}>
+            <label style={styles.label}>Medication</label>
+            <input type="text" name="medication" placeholder="Prescribed medications" value={formData.medication} onChange={handleInputChange} style={styles.input} />
+        </div>
+        <div style={styles.fullWidth}>
+            <label style={styles.label}>Allergies</label>
+            <input type="text" name="allergies" placeholder="Known allergies (Leave blank if none)" value={formData.allergies} onChange={handleInputChange} style={styles.input} />
+        </div>
         
-        <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '10px' }}>
+        <div style={styles.actionRow}>
           <button type="submit" disabled={loading} style={styles.saveBtn}>
-            {loading ? 'กำลังบันทึก...' : 'บันทึกประวัติ'}
+            {loading ? 'Saving Record...' : 'Save Medical Record'}
           </button>
           <button type="button" onClick={onCancel} style={styles.cancelBtn}>
-            ยกเลิก
+            Cancel Entry
           </button>
         </div>
       </form>
@@ -80,11 +95,18 @@ export default function PatientHistoryForm({ patient, onSuccess, onCancel }) {
 }
 
 const styles = {
-  modalCard: { background: '#f0f9ff', padding: '20px', borderRadius: '8px', border: '2px dashed #7dd3fc', marginBottom: '20px' },
-  form: { display: 'flex', gap: '10px', flexWrap: 'wrap' },
-  input: { flex: '1 1 45%', padding: '10px', borderRadius: '4px', border: '1px solid #bae6fd' },
-  textarea: { width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #bae6fd', minHeight: '60px', fontFamily: 'inherit' },
-  saveBtn: { padding: '10px 20px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', flex: 1 },
-  cancelBtn: { padding: '10px 20px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' },
-  notification: { padding: '12px 16px', borderRadius: '6px', marginBottom: '10px', fontSize: '14px', fontWeight: '500' }
+  modalCard: { background: '#ffffff', padding: '25px', borderRadius: '8px', border: '1px solid #1e3a8a', borderTop: '4px solid #1e3a8a', marginBottom: '25px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' },
+  header: { marginBottom: '20px' },
+  title: { color: '#1e3a8a', margin: '0 0 5px 0', fontSize: '18px' },
+  subtitle: { color: '#475569', margin: 0, fontSize: '14px', fontWeight: 'bold' },
+  form: { display: 'flex', gap: '15px', flexWrap: 'wrap' },
+  fullWidth: { flex: '1 1 100%' },
+  inputContainer: { flex: '1 1 45%' },
+  label: { fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '5px', display: 'block', textTransform: 'uppercase' },
+  input: { width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #cbd5e1', boxSizing: 'border-box', fontSize: '14px' },
+  textarea: { width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #cbd5e1', minHeight: '80px', fontFamily: 'inherit', boxSizing: 'border-box', fontSize: '14px' },
+  actionRow: { display: 'flex', gap: '10px', width: '100%', marginTop: '10px', borderTop: '1px solid #e2e8f0', paddingTop: '15px' },
+  saveBtn: { padding: '10px 20px', background: '#1976d2', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' },
+  cancelBtn: { padding: '10px 20px', background: '#fff', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' },
+  notification: { padding: '12px 16px', borderRadius: '4px', marginBottom: '15px', fontSize: '14px', fontWeight: '500' }
 };

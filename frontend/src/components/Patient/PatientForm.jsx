@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-// รับ props ชื่อ onAddSuccess เพื่อสั่งให้หน้าหลักโหลดข้อมูลใหม่เมื่อบันทึกเสร็จ
 export default function PatientForm({ onAddSuccess }) {
   const [formData, setFormData] = useState({ name: '', age: '', gender: 'Male' });
   const [loading, setLoading] = useState(false);
@@ -13,7 +12,7 @@ export default function PatientForm({ onAddSuccess }) {
 
   const showMessage = (text, type) => {
     setMessage({ text, type });
-    setTimeout(() => setMessage({ text: '', type: '' }), 3000); // หายไปหลังจาก 3 วินาที
+    setTimeout(() => setMessage({ text: '', type: '' }), 3000);
   };
 
   const handleSubmit = async (e) => {
@@ -28,14 +27,15 @@ export default function PatientForm({ onAddSuccess }) {
       });
 
       if (response.ok) {
-        showMessage('✅ เพิ่มผู้ป่วยสำเร็จ!', 'success');
-        setFormData({ name: '', age: '', gender: 'Male' }); // ล้างฟอร์ม
-        onAddSuccess(); // เรียกฟังก์ชันที่แม่ส่งมาให้ เพื่อโหลดตารางใหม่
+        showMessage('Patient registered successfully.', 'success');
+        setFormData({ name: '', age: '', gender: 'Male' });
+        onAddSuccess(); 
       } else {
-        showMessage(`❌ เกิดข้อผิดพลาด: ${JSON.stringify(errorData)}`, 'error');
+        const errorData = await response.json(); 
+        showMessage(`Registration failed: ${JSON.stringify(errorData)}`, 'error');
       }
     } catch (error) {
-      showMessage('❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้', 'error');
+      showMessage('Unable to connect to the server.', 'error');
     } finally {
       setLoading(false);
     }
@@ -43,26 +43,50 @@ export default function PatientForm({ onAddSuccess }) {
 
   return (
     <div style={styles.card}>
-      <h3 style={{ marginTop: 0 }}>➕ เพิ่มผู้ป่วยใหม่</h3>
+      <h3 style={styles.title}>Register New Patient</h3>
+      {message.text && (
+        <div style={{
+          ...styles.notification,
+          backgroundColor: message.type === 'success' ? '#edf7ed' : '#fdeded',
+          color: message.type === 'success' ? '#1e4620' : '#5f2120',
+          border: `1px solid ${message.type === 'success' ? '#c8e6c9' : '#ffcdd2'}`
+        }}>
+          {message.text}
+        </div>
+      )}
       <form onSubmit={handleSubmit} style={styles.form}>
-        <input type="text" name="name" placeholder="ชื่อ - นามสกุล" value={formData.name} onChange={handleInputChange} required style={styles.input} />
-        <input type="number" name="age" placeholder="อายุ" value={formData.age} onChange={handleInputChange} required style={{ ...styles.input, maxWidth: '100px' }} />
-        <select name="gender" value={formData.gender} onChange={handleInputChange} style={styles.input}>
-          <option value="Male">ชาย</option>
-          <option value="Female">หญิง</option>
-        </select>
-        <button type="submit" disabled={loading} style={styles.button}>
-          {loading ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
-        </button>
+        <div style={styles.inputGroup}>
+            <label style={styles.label}>Full Name</label>
+            <input type="text" name="name" placeholder="Enter full name" value={formData.name} onChange={handleInputChange} required style={styles.input} />
+        </div>
+        <div style={{...styles.inputGroup, maxWidth: '120px'}}>
+            <label style={styles.label}>Age</label>
+            <input type="number" name="age" placeholder="Years" value={formData.age} onChange={handleInputChange} required style={styles.input} />
+        </div>
+        <div style={{...styles.inputGroup, maxWidth: '150px'}}>
+            <label style={styles.label}>Gender</label>
+            <select name="gender" value={formData.gender} onChange={handleInputChange} style={styles.input}>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            </select>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <button type="submit" disabled={loading} style={styles.button}>
+            {loading ? 'Processing...' : 'Register Patient'}
+            </button>
+        </div>
       </form>
     </div>
   );
 }
 
-// (เอา styles.card, styles.form, styles.input, styles.button มาใส่ตรงนี้)
 const styles = {
-    card: { background: '#fff', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', marginBottom: '25px', border: '1px solid #e2e8f0' },
-    form: { display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' },
-    input: { flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' },
-    button: { padding: '10px 20px', background: '#0d9488', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }
+    card: { background: '#f8fafc', padding: '20px 25px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '25px' },
+    title: { marginTop: 0, color: '#334155', fontSize: '16px', fontWeight: 'bold', marginBottom: '15px' },
+    form: { display: 'flex', gap: '15px', flexWrap: 'wrap' },
+    inputGroup: { flex: 1, display: 'flex', flexDirection: 'column', gap: '5px' },
+    label: { fontSize: '12px', fontWeight: 'bold', color: '#64748b', textTransform: 'uppercase' },
+    input: { padding: '10px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '14px', width: '100%', boxSizing: 'border-box' },
+    button: { padding: '10px 20px', background: '#1e3a8a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', height: '40px' }, 
+    notification: { padding: '12px 16px', borderRadius: '4px', marginBottom: '15px', fontSize: '14px', fontWeight: '500' }
 };

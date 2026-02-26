@@ -20,10 +20,12 @@ export default function PatientPage() {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
-      <h2 style={{ color: '#0f766e', borderBottom: '2px solid #ccfbf1', paddingBottom: '10px' }}>
-        🩺 ระบบจัดการข้อมูลผู้ป่วย
-      </h2>
+    <div style={{ padding: '30px', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ borderBottom: '2px solid #1e3a8a', paddingBottom: '15px', marginBottom: '25px' }}>
+        <h2 style={{ color: '#1e3a8a', margin: 0, fontSize: '24px' }}>
+          Patient Management System
+        </h2>
+      </div>
 
       <PatientForm onAddSuccess={fetchPatients} />
 
