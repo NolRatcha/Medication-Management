@@ -10,5 +10,7 @@ class StaffInfo(Base):
         primary_key = True,
         autoincrement = True
         )
+    username = Column(String(255), nullable=False, Unique = True)
+    password = Column(String(255), nullable = False)
     name = Column(String(255), nullable = False)
     role = Column(String(255), nullable = False)

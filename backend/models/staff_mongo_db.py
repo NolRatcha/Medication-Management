@@ -5,7 +5,7 @@ from datetime import datetime, UTC
 
 class StaffAuth(Document):
     staff_id: int
-    action: int
+    position: Optional[str] = None
 
     class Settings:
         name = "staff_auth"
