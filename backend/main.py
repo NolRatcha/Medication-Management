@@ -6,7 +6,7 @@ from beanie import init_beanie
 from database import engine, Base, connect_mongodb, disconnect_mongodb
 from models.med_info_mongo_model import MedInfo
 from models.staff_mongo_db import StaffAuth, EventLog
-from models.patient_mongo_db import Patient_hist
+from models.patient_mongo_db import Patient_hist 
 from routers import inventory_router, patients_router, auth_router
 
 # ==========================================

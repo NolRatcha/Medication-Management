@@ -6,10 +6,19 @@ class Patient(Base):
     __tablename__ = "patient"
 
     p_id = Column(BigInteger, primary_key=True, autoincrement=True)
-    name = Column(String(255), nullable=False)
+    
+    # ใช้ชื่อเป็น Username (ควรตั้งเป็น unique=True เพื่อไม่ให้ล็อกอินซ้ำกัน)
+    name = Column(String(255), nullable=False) 
+    
+    # เพิ่มเลขบัตรประชาชน และ Password สำหรับให้คนไข้ใช้ล็อกอิน
+    citizen_id = Column(String(13), nullable=False, unique=True) 
+    password = Column(String(255), nullable=False) 
+    
     age = Column(BigInteger, nullable=False) 
     gender = Column(String(100), nullable=False) 
     
+    # เชื่อมโยงกับแพทย์เจ้าของไข้
+    doctor_id = Column(BigInteger, ForeignKey("staff.staff_id"), nullable=True)
 
     treatments = relationship("Treatment", back_populates="patient")
 

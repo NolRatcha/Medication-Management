@@ -12,10 +12,27 @@ export default function PatientPage() {
   }, []);
 
   const fetchPatients = async () => {
-    const response = await fetch('http://localhost:8000/api/v1/patients/');
-    if (response.ok) {
-      const data = await response.json();
-      setPatients(data);
+    try {
+      // 1. ดึง Token จากที่เก็บไว้ตอน Login (แก้ชื่อ key ให้ตรงกับที่คุณเซฟไว้ เช่น 'access_token' หรือ 'token')
+      const token = localStorage.getItem('token'); 
+
+      // 2. แนบ Token ไปกับ Header
+      const response = await fetch('http://localhost:8000/api/v1/patients/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // ส่ง Token ไปยืนยันตัวตน
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPatients(data);
+      } else {
+        console.error("Unauthorized or Token expired");
+      }
+    } catch (error) {
+      console.error("Error fetching patients:", error);
     }
   };
 

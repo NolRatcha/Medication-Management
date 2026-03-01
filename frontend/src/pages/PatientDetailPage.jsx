@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import TreatmentSection from '../components/Patient/TreatmentSection';
+import PatientHistoryForm from '../components/Patient/PatientHistForm';
 
 export default function PatientDetailPage() {
   const { id } = useParams();
@@ -14,6 +15,9 @@ export default function PatientDetailPage() {
     history: '', diagnosis: '', medication: '', allergies: ''
   });
   const [saving, setSaving] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const userRole = localStorage.getItem("role")?.toLowerCase();
 
   useEffect(() => {
     fetchPatientData();
@@ -132,47 +136,41 @@ export default function PatientDetailPage() {
         <div style={{ ...styles.card, flex: 2 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={styles.sectionTitle}>Medical History</h3>
-            {history && !isEditing && (
+            {history && !isEditing && userRole === 'doctor' && (
               <button onClick={handleEditClick} style={styles.editBtn}>
-                Edit History
+              Edit History
               </button>
             )}
           </div>
 
           {!history ? (
             <div style={styles.emptyBox}>
-              No medical history recorded for this patient.<br/>
-              Please return to the directory to add a new record.
+              <p>No medical history recorded for this patient.</p>
+              {/* แสดงปุ่มเฉพาะหมอเท่านั้น */}
+              {userRole === 'doctor' && !isCreating && (
+                <button 
+                  onClick={() => setIsCreating(true)} 
+                  style={{...styles.editBtn, background: '#1e3a8a', color: '#fff'}}
+                >
+                  + Create New History
+                </button>
+              )}
+
+              {/* ถ้ากดปุ่มให้แสดงฟอร์มสร้างประวัติ */}
+              {isCreating && (
+                <div style={{ marginTop: '20px', textAlign: 'left' }}>
+                  <PatientHistoryForm 
+                    patient={patient} 
+                    onSuccess={() => {
+                      setIsCreating(false);
+                      fetchPatientHistory(); // ดึงข้อมูลใหม่มาแสดงทันทีหลังสร้างเสร็จ
+                    }} 
+                    onCancel={() => setIsCreating(false)} 
+                  />
+                </div>
+              )}
             </div>
-          ) : isEditing ? (
-            <form onSubmit={handleUpdateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <div>
-                <label style={styles.label}>Clinical History</label>
-                <textarea name="history" value={editFormData.history} onChange={handleInputChange} style={styles.textarea} />
-              </div>
-              <div>
-                <label style={styles.label}>Diagnosis</label>
-                <input type="text" name="diagnosis" value={editFormData.diagnosis} onChange={handleInputChange} style={styles.input} />
-              </div>
-              <div>
-                <label style={styles.label}>Current Medication</label>
-                <input type="text" name="medication" value={editFormData.medication} onChange={handleInputChange} style={styles.input} />
-              </div>
-              <div>
-                <label style={styles.label}>Allergies</label>
-                <input type="text" name="allergies" value={editFormData.allergies} onChange={handleInputChange} style={styles.input} />
-              </div>
-              
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button type="submit" disabled={saving} style={styles.saveBtn}>
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-                <button type="button" onClick={() => setIsEditing(false)} style={styles.cancelBtn}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          ) : (
+          )  : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div style={styles.historyBox}>
                 <div style={styles.historyLabel}>Clinical History</div>
