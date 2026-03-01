@@ -35,41 +35,18 @@ export default function AddMedInfo() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <div style={styles.tag}>MongoDB</div>
         <h2 style={styles.title}>Add Med Info</h2>
         <p style={styles.subtitle}>Add guideline and warning info for a medication</p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label}>Medication ID <span style={styles.req}>*</span></label>
-          <input
-            style={styles.input}
-            name="med_id"
-            type="number"
-            value={form.med_id}
-            onChange={handleChange}
-            placeholder="e.g. 1"
-            required min="1"
-          />
+          <input style={styles.input} name="med_id" type="number" value={form.med_id} onChange={handleChange} placeholder="e.g. 1" required min="1" />
 
           <label style={styles.label}>Guideline</label>
-          <textarea
-            style={styles.textarea}
-            name="guideline"
-            value={form.guideline}
-            onChange={handleChange}
-            placeholder="Usage instructions, dosage, etc."
-            rows={4}
-          />
+          <textarea style={styles.textarea} name="guideline" value={form.guideline} onChange={handleChange} placeholder="Usage instructions, dosage, etc." rows={4} />
 
           <label style={styles.label}>Warning</label>
-          <textarea
-            style={{ ...styles.textarea, borderColor: "#fecaca" }}
-            name="warning"
-            value={form.warning}
-            onChange={handleChange}
-            placeholder="Side effects, contraindications, etc."
-            rows={4}
-          />
+          <textarea style={{ ...styles.textarea, borderColor: "#fecaca" }} name="warning" value={form.warning} onChange={handleChange} placeholder="Side effects, contraindications, etc." rows={4} />
 
           <button style={{ ...styles.btn, opacity: loading ? 0.7 : 1 }} type="submit" disabled={loading}>
             {loading ? "Saving..." : "Save Med Info"}
@@ -88,8 +65,7 @@ export default function AddMedInfo() {
 
 const styles = {
   page: { minHeight: "100vh", background: "#fffbeb", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" },
-  card: { background: "#fff", borderRadius: "16px", padding: "40px", width: "100%", maxWidth: "480px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)", position: "relative" },
-  tag: { position: "absolute", top: "20px", right: "20px", background: "#fef3c7", color: "#92400e", fontSize: "11px", fontWeight: "700", padding: "4px 10px", borderRadius: "20px", letterSpacing: "0.05em" },
+  card: { background: "#fff", borderRadius: "16px", padding: "40px", width: "100%", maxWidth: "480px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" },
   title: { margin: "0 0 6px", fontSize: "24px", fontWeight: "800", color: "#78350f" },
   subtitle: { margin: "0 0 28px", fontSize: "14px", color: "#6b7280" },
   form: { display: "flex", flexDirection: "column", gap: "6px" },
