@@ -15,6 +15,7 @@ export default function Login() {
             const res = await axios.post( `${API}login`, form);
 
             localStorage.setItem("token", res.data.access_token || "loggedin");
+            localStorage.setItem('role', res.data.role);
             navigate("/");
         }
         catch {

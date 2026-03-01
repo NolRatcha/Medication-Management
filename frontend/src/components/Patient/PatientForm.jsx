@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 export default function PatientForm({ onAddSuccess }) {
-  const [formData, setFormData] = useState({ name: '', age: '', gender: 'Male' });
+  const [formData, setFormData] = useState({ name: '',citizen_id: '', age: '', gender: 'Male' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
@@ -17,22 +17,31 @@ export default function PatientForm({ onAddSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading(false); // เดิมอาจเป็น true
     
     try {
+      // 1. ดึง Token มาจาก localStorage (ใช้ชื่อ 'token' ให้ตรงกับไฟล์ Login.jsx ของคุณ)
+      const token = localStorage.getItem('token'); 
+
       const response = await fetch('http://localhost:8000/api/v1/patients/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          // 2. เพิ่มบรรทัดนี้เพื่อส่ง Token ไปยืนยันตัวตนกับ Backend
+          'Authorization': `Bearer ${token}` 
+        },
         body: JSON.stringify({ ...formData, age: parseInt(formData.age, 10) }),
       });
 
       if (response.ok) {
         showMessage('Patient registered successfully.', 'success');
-        setFormData({ name: '', age: '', gender: 'Male' });
+        // รีเซ็ตฟอร์ม รวมถึง citizen_id ด้วย
+        setFormData({ name: '', citizen_id: '', age: '', gender: 'Male' }); 
         onAddSuccess(); 
       } else {
         const errorData = await response.json(); 
-        showMessage(`Registration failed: ${JSON.stringify(errorData)}`, 'error');
+        // แสดงข้อความ Error ที่ละเอียดขึ้นเพื่อให้รู้ว่าซ้ำหรือติดสิทธิ์
+        showMessage(`Registration failed: ${errorData.detail || 'Unknown error'}`, 'error');
       }
     } catch (error) {
       showMessage('Unable to connect to the server.', 'error');
@@ -58,6 +67,10 @@ export default function PatientForm({ onAddSuccess }) {
         <div style={styles.inputGroup}>
             <label style={styles.label}>Full Name</label>
             <input type="text" name="name" placeholder="Enter full name" value={formData.name} onChange={handleInputChange} required style={styles.input} />
+        </div>
+        <div style={styles.inputGroup}>
+            <label style={styles.label}>Citizen ID</label>
+            <input type="text" name="citizen_id" placeholder="13-digit ID" value={formData.citizen_id} onChange={handleInputChange} required maxLength="13" style={styles.input} />
         </div>
         <div style={{...styles.inputGroup, maxWidth: '120px'}}>
             <label style={styles.label}>Age</label>
