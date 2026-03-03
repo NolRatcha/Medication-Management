@@ -33,6 +33,9 @@ function Navbar() {
     localStorage.removeItem("permissions");
     window.location.href = "/auth/login";
   }
+  const permissions = JSON.parse(localStorage.getItem("permissions") || "[]");
+  const isAdmin = permissions.includes("Admin");
+
   return (
     <nav style={styles.nav}>
       <b style={styles.logo}>🏥 Clinic App</b>
@@ -41,11 +44,28 @@ function Navbar() {
           <Link
             key={l.to}
             to={l.to}
-            style={{ ...styles.link, ...(location.pathname === l.to ? styles.activeLink : {}) }}
+            style={{
+              ...styles.link,
+              ...(location.pathname === l.to ? styles.activeLink : {})
+            }}
           >
             {l.label}
           </Link>
         ))}
+
+        {isAdmin && (
+          <Link
+            to="/admin/permissions"
+            style={{
+              ...styles.link,
+              ...(location.pathname === "/admin/permissions"
+                ? styles.activeLink
+                : {})
+            }}
+          >
+            Admin Panel
+          </Link>
+        )}
       </div>
       <button onClick={handleLogout} style={styles.btn}>Logout</button>
     </nav>
@@ -114,14 +134,7 @@ function App() {
                   <Route path="/staff" element={<StaffPage />} />
 
                   {/* 🔐 ADMIN ONLY */}
-                  <Route
-                    path="/admin/permissions"
-                    element={
-                      <ProtectedRoute requiredRole="Admin">
-                        <AdminPermissionPage />
-                      </ProtectedRoute>
-                    }
-                  />
+                  <Route path="/admin/permissions" element={<AdminPermissionPage />}/>
                 </Routes>
               </>
             </ProtectedRoute>
