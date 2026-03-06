@@ -111,7 +111,7 @@ export default function PatientSearch({ onSearchResults, onClearSearch }) {
             {isLoading ? "searching..." : "search"}
           </button>
           <button type="button" onClick={handleClear} style={clearBtnStyle}>
-            ล้างการค้นหา
+            clear search
           </button>
         </div>
       </form>

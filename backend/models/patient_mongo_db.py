@@ -8,6 +8,7 @@ class Patient_hist(Document):
     diagnosis: Optional[Union[List[str], str]] = None 
     medication: Optional[Union[List[str], str]] = None
     allergies: Optional[Union[List[str], str]] = None
+    image_url: Optional[str] = None
     class Settings:
         name = "patient_hist"
     

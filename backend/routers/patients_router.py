@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query,UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from pydantic import BaseModel,Field
@@ -6,7 +6,9 @@ from typing import Optional, List
 from datetime import date
 from passlib.context import CryptContext
 import json
-
+import shutil
+import os
+import time
 
 from models.staff_mongo_db import StaffAuth, Role
 from fastapi.security import OAuth2PasswordBearer
@@ -22,6 +24,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 SECRET_KEY = "your-very-secret-key-change-this"
 ALGORITHM = "HS256"
 
+os.makedirs("uploads/patients", exist_ok=True)
 # ==========================================
 # Helpers
 # ==========================================
@@ -75,6 +78,7 @@ class PatientHistCreate(BaseModel):
     diagnosis: Optional[str] = None
     medication: Optional[str] = None
     allergies: Optional[str] = None
+    image_url: Optional[str] = None
 
 class PatientHistResponse(BaseModel):
     p_id: int
@@ -82,6 +86,7 @@ class PatientHistResponse(BaseModel):
     diagnosis: Optional[List[str]] = None
     medication: Optional[List[str]] = None
     allergies: Optional[List[str]] = None
+    image_url: Optional[str] = None
 
 # ==========================================
 # Router
@@ -137,6 +142,33 @@ async def require_pharmacist(current_user: dict = Depends(get_current_user_token
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Pharmacist permission required"
         )
+    return current_user
+
+
+async def require_doctor_or_pharmacist(current_user: dict = Depends(get_current_user_token)):
+    """ Middleware เช็คว่ามีสิทธิ์ DOCTOR หรือ PHARMACIST อย่างใดอย่างหนึ่ง """
+    if current_user["role"] == "patient":
+        raise HTTPException(status_code=403, detail="Patients cannot perform this action")
+
+    # ไปค้นหาสิทธิ์ของพนักงานคนนี้จาก MongoDB
+    staff_auth = await StaffAuth.find_one(StaffAuth.staff_id == current_user["id"])
+    
+    # ถ้าไม่พบข้อมูลสิทธิ์ หรือไม่มีทั้งสิทธิ์หมอและเภสัช ให้เตะออก
+    if not staff_auth:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Staff authorization not found"
+        )
+
+    has_doctor_role = Role.DOCTOR in staff_auth.permission
+    has_pharmacist_role = Role.PHARMACIST in staff_auth.permission
+
+    if not (has_doctor_role or has_pharmacist_role):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Doctor or Pharmacist permission required"
+        )
+        
     return current_user
 
 # ------------------------------------------
@@ -253,6 +285,7 @@ async def get_patient(p_id: int, db: AsyncSession = Depends(get_db)):
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     return patient
+
 
 
 # ใช้ dependencies=[Depends(require_doctor)] เพื่อบล็อกถ้าไม่ใช่หมอ
@@ -386,6 +419,28 @@ async def get_patient_history(p_id: int, current_user: dict = Depends(get_curren
         raise HTTPException(status_code=404, detail="Patient history not found")
     return hist
 
+@router.post("/{p_id}/upload-image")
+async def upload_patient_image(
+    p_id: int, 
+    file: UploadFile = File(...),
+    current_user: dict = Depends(require_doctor_or_pharmacist)
+):
+    # สร้างชื่อไฟล์ที่ไม่ซ้ำกัน
+    file_location = f"uploads/patients/{p_id}_{file.filename}"
+    file_extension = file.filename.split(".")[-1]
+
+    timestamp = int(time.time())
+    unique_filename = f"{p_id}_{timestamp}.{file_extension}"
+
+    file_location = f"uploads/patients/{unique_filename}"
+    
+    # บันทึกไฟล์ลงในระบบ
+    with open(file_location, "wb+") as file_object:
+        shutil.copyfileobj(file.file, file_object)
+        
+    # ส่งคืน URL ของรูปภาพ
+    return {"image_url": f"/uploads/patients/{unique_filename}"}
+
 
 @router.post("/{p_id}/history", response_model=PatientHistResponse, status_code=status.HTTP_201_CREATED)
 async def create_patient_history(p_id: int, body: PatientHistCreate,current_user: dict = Depends(require_doctor)):
@@ -399,6 +454,7 @@ async def create_patient_history(p_id: int, body: PatientHistCreate,current_user
         diagnosis=parse_csv(body.diagnosis),
         medication=parse_csv(body.medication),
         allergies=parse_csv(body.allergies),
+        image_url=body.image_url
     )
     await hist.insert()
     return hist
@@ -415,6 +471,7 @@ async def update_patient_history(p_id: int, body: PatientHistCreate,current_user
     if body.diagnosis is not None: update_data["diagnosis"] = parse_csv(body.diagnosis)
     if body.medication is not None: update_data["medication"] = parse_csv(body.medication)
     if body.allergies is not None: update_data["allergies"] = parse_csv(body.allergies)
+    if body.image_url is not None: update_data["image_url"] = body.image_url
 
     if update_data:
         await hist.set(update_data)
