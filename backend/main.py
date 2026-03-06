@@ -1,6 +1,8 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from database import engine, Base, connect_mongodb, disconnect_mongodb
@@ -50,6 +52,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+
+
 # ==========================================
 # 4. ตั้งค่า CORS (สำคัญมากสำหรับ React)
 # ==========================================
@@ -64,6 +68,9 @@ app.add_middleware(
     allow_methods=["*"], # อนุญาตทุก Method (GET, POST, PUT, DELETE)
     allow_headers=["*"], # อนุญาตทุก Header
 )
+
+os.makedirs("uploads/patients", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # ==========================================
 # 5. ประกอบ API ของเพื่อนๆ แต่ละคนเข้ากับโครงหลัก

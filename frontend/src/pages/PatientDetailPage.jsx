@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import PatientHistoryForm from '../components/Patient/PatientHistForm';
 
 const PATIENT_API = 'http://localhost:8000/api/v1/patients';
 const INVENTORY_API = 'http://localhost:8000/api/v1/inventory';
+const BASE_URL = 'http://localhost:8000';
 
 export default function PatientDetailPage() {
   const { id } = useParams();
@@ -23,6 +24,9 @@ export default function PatientDetailPage() {
   const [dispenseForm, setDispenseForm] = useState({ med_id: '', amount: '', date: new Date().toISOString().split('T')[0] });
   const [dispensing, setDispensing] = useState(false);
 
+  const [imageFile, setImageFile] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   const userRole = localStorage.getItem("role")?.toLowerCase();
   const token = localStorage.getItem("token");
 
@@ -38,7 +42,9 @@ export default function PatientDetailPage() {
 
   const fetchPatientData = async () => {
     try {
-      const res = await fetch(`${PATIENT_API}/${id}`);
+      const res = await fetch(`${PATIENT_API}/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (res.ok) setPatient(await res.json());
     } catch (e) { console.error(e); }
   };
@@ -57,14 +63,18 @@ export default function PatientDetailPage() {
 
   const fetchTreatments = async () => {
     try {
-      const res = await fetch(`${PATIENT_API}/${id}/treatments`);
+      const res = await fetch(`${PATIENT_API}/${id}/treatments`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (res.ok) setTreatments(await res.json());
     } catch (e) { console.error(e); }
   };
 
   const fetchMedications = async () => {
     try {
-      const res = await fetch(`${INVENTORY_API}/medication`);
+      const res = await fetch(`${INVENTORY_API}/medication`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (res.ok) setMedications(await res.json());
     } catch (e) { console.error(e); }
   };
@@ -72,6 +82,76 @@ export default function PatientDetailPage() {
   const showMessage = (text, type) => {
     setMessage({ text, type });
     setTimeout(() => setMessage({ text: '', type: '' }), 4000);
+  };
+
+  const navigate = useNavigate(); // ประกาศใช้งาน navigate
+
+  const handleDeletePatient = async () => {
+    // 1. แจ้งเตือนยืนยันก่อนลบ ป้องกันการกดผิด
+    const confirmDelete = window.confirm(`Are you sure you want to delete patient: ${patient.name}? \nThis action cannot be undone.`);
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`${PATIENT_API}/${id}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}` 
+        }
+      });
+
+      if (res.ok) {
+        alert('Patient deleted successfully.');
+        navigate('/patients'); // 2. ลบเสร็จให้เด้งกลับไปหน้าหน้ารวมผู้ป่วย
+      } else {
+        const errorData = await res.json();
+        showMessage(`Error: ${errorData.detail || 'Failed to delete patient.'}`, 'error');
+      }
+    } catch (error) {
+      showMessage('Unable to connect to the server.', 'error');
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!imageFile) return;
+    setUploadingImage(true);
+    try {
+      // 1. อัปโหลดไฟล์รูปภาพไปที่เซิร์ฟเวอร์
+      const formData = new FormData();
+      formData.append('file', imageFile);
+
+      const uploadRes = await fetch(`${PATIENT_API}/${id}/upload-image`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!uploadRes.ok) throw new Error('Failed to upload image');
+      const uploadData = await uploadRes.json();
+      const newImageUrl = uploadData.image_url;
+
+      // 2. อัปเดต URL รูปภาพลงใน Patient History
+      const updateRes = await fetch(`${PATIENT_API}/${id}/history`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ image_url: newImageUrl }), 
+        // หมายเหตุ: Backend คุณต้องรองรับการรับค่า image_url ใน Method PUT ด้วย
+      });
+
+      if (updateRes.ok) {
+        showMessage('Patient photo updated successfully.', 'success');
+        setImageFile(null); // เคลียร์ไฟล์ที่เลือก
+        fetchPatientHistory(); // รีเฟรชข้อมูลเพื่อแสดงรูปใหม่
+      } else {
+        showMessage('Error updating patient photo.', 'error');
+      }
+    } catch (error) {
+      showMessage(error.message || 'Unable to connect to the server.', 'error');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleEditClick = () => {
@@ -110,6 +190,7 @@ export default function PatientDetailPage() {
     }
   };
 
+
   const handleDispense = async (e) => {
     e.preventDefault();
     if (!dispenseForm.med_id || !dispenseForm.amount) return;
@@ -147,6 +228,8 @@ export default function PatientDetailPage() {
     return med ? med.name : `Med ID: ${med_id}`;
   };
 
+  
+
   if (loading) return <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Loading patient data...</div>;
   if (!patient) return <div style={{ padding: '20px', textAlign: 'center', color: '#dc2626' }}>Patient record not found.</div>;
 
@@ -173,6 +256,40 @@ export default function PatientDetailPage() {
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginTop: '20px' }}>
         <div style={styles.card}>
           <h3 style={styles.sectionTitle}>General Information</h3>
+
+          {/* ---- ส่วนแสดงรูปภาพผู้ป่วย ---- */}
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            {history?.image_url ? (
+              <img 
+              src={`${BASE_URL}${history.image_url}`} 
+              alt="Patient Profile" 
+              style={styles.profileImage} 
+            />
+            ) : (
+              <div style={styles.noImagePlaceholder}>
+                <span style={{ color: '#94a3b8', fontSize: '14px' }}>No Photo</span>
+              </div>
+            )}
+            
+            {userRole === 'doctor'&& (
+              <div style={{ marginTop: '10px' }}>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => setImageFile(e.target.files[0])} 
+                  style={{ fontSize: '12px', width: '100%', marginBottom: '8px' }}
+                />
+                {imageFile && (
+                  <button onClick={handleImageUpload} disabled={uploadingImage} style={styles.uploadBtn}>
+                    {uploadingImage ? 'Uploading...' : 'Save Photo'}
+                  </button>
+                )}
+              </div>
+            )}
+            
+          </div>
+          {/* --------------------------- */}
+
           <table style={styles.infoTable}>
             <tbody>
               <tr><td style={styles.infoLabel}>Patient ID (HN)</td><td>{patient.p_id}</td></tr>
@@ -181,6 +298,26 @@ export default function PatientDetailPage() {
               <tr><td style={styles.infoLabel}>Gender</td><td>{patient.gender}</td></tr>
             </tbody>
           </table>
+
+          {userRole === 'doctor' && (
+            <div style={{ marginTop: '20px', textAlign: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+              <button 
+                onClick={handleDeletePatient} 
+                style={{
+                  padding: '8px 16px', 
+                  backgroundColor: '#ef4444', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '4px', 
+                  cursor: 'pointer', 
+                  fontWeight: 'bold',
+                  width: '100%'
+                }}
+              >
+                Delete Patient
+              </button>
+            </div>
+          )}
         </div>
 
         <div style={{ ...styles.card, flex: 2 }}>
@@ -256,7 +393,7 @@ export default function PatientDetailPage() {
       {/* Dispense Medication — doctor/pharmacist only */}
       {(userRole === 'doctor' || userRole === 'pharmacist') && (
         <div style={{ ...styles.card, marginTop: '24px' }}>
-          <h3 style={styles.sectionTitle}>💊 Dispense Medication</h3>
+          <h3 style={styles.sectionTitle}>Dispense Medication</h3>
           <form onSubmit={handleDispense} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div style={{ flex: 2, minWidth: '160px' }}>
               <label style={styles.label}>Medication <span style={{ color: '#ef4444' }}>*</span></label>
@@ -356,4 +493,7 @@ const styles = {
   notification: { padding: '12px 16px', borderRadius: '4px', marginBottom: '20px', fontSize: '14px', fontWeight: '500' },
   th: { padding: '10px 12px', fontSize: '13px', fontWeight: '700', color: '#475569' },
   td: { padding: '10px 12px', color: '#1e293b' },
+  profileImage: { width: '160px', height: '160px', objectFit: 'cover', borderRadius: '50%', border: '4px solid #f1f5f9', margin: '0 auto', display: 'block' },
+  noImagePlaceholder: { width: '160px', height: '160px', background: '#e2e8f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', border: '4px solid #f1f5f9' },
+  uploadBtn: { padding: '6px 12px', background: '#0284c7', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', width: '100%' },
 };

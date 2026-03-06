@@ -44,10 +44,9 @@ export default function PatientPage() {
 
       <PatientForm onAddSuccess={fetchPatients} />
 
-      {/* 2️⃣ วางช่องค้นหาไว้ตรงนี้ (หรือสลับที่กับฟอร์มเพิ่มคนไข้ก็ได้ครับ) */}
       <PatientSearch 
-        onSearchResults={(data) => setPatients(data)} // เมื่อค้นหาเจอ ให้อัปเดตตาราง
-        onClearSearch={fetchPatients} // เมื่อกดล้างการค้นหา ให้ไปดึงข้อมูลทั้งหมดมาใหม่
+        onSearchResults={(data) => setPatients(data)} 
+        onClearSearch={fetchPatients}
       />
 
       {selectedPatient && (
