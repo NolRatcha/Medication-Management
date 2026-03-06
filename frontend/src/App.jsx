@@ -8,6 +8,8 @@ import AddMedication from './pages/AddMedication';
 import AddStock from './pages/AddStock';
 import AddMedInfo from './pages/AddMedInfo';
 import ViewMedications from './pages/ViewMedications';
+import DrugReport from './pages/DrugReport';
+import Home from './pages/Home';
 import StaffPage from './pages/Staff';
 import PatientPage from './pages/Patiens';
 import PatientDetailPage from './pages/PatientDetailPage';
@@ -21,6 +23,7 @@ const navLinks = [
   { to: "/inventory/add-stock", label: "Add Stock" },
   { to: "/inventory/add-medinfo", label: "Add Med Info" },
   { to: "/inventory/view", label: "View Medications" },
+  { to: "/inventory/report", label: "Drug Report" },
   { to: "/staff", label: "Staff" },
 ];
 
@@ -55,48 +58,47 @@ function App() {
       <div style={{ fontFamily: 'sans-serif' }}>
         <Routes>
 
-        {/* 🌐 Public routes */}
-        <Route
-          path="/auth/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
+          {/* 🌐 Public routes */}
+          <Route
+            path="/auth/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
 
-        <Route
-          path="/auth/register"
-          element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          }
-        />
+          <Route
+            path="/auth/register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
 
-        {/* 🔐 Protected layout */}
-        <Route
-          path="/*"
-          element={
-            <ProtectedRoute>
-              <>
-                <Navbar />
-
-                <Routes>
-                  <Route path="/" element={<h1 style={{ padding: 40 }}>Welcome to Clinic Management System</h1>} />
-                  <Route path="/patients" element={<PatientPage />} />
-                  <Route path="/patients/:id" element={<PatientDetailPage />} />
-                  <Route path="/inventory/add-medication" element={<AddMedication />} />
-                  <Route path="/inventory/add-stock" element={<AddStock />} />
-                  <Route path="/inventory/add-medinfo" element={<AddMedInfo />} />
-                  <Route path="/inventory/view" element={<ViewMedications />} />
-                  <Route path="/staff" element={<StaffPage />} />
-                </Routes>
-
-              </>
-            </ProtectedRoute>
-          }
-        />
+          {/* 🔐 Protected layout */}
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/patients" element={<PatientPage />} />
+                    <Route path="/patients/:id" element={<PatientDetailPage />} />
+                    <Route path="/inventory/add-medication" element={<AddMedication />} />
+                    <Route path="/inventory/add-stock" element={<AddStock />} />
+                    <Route path="/inventory/add-medinfo" element={<AddMedInfo />} />
+                    <Route path="/inventory/view" element={<ViewMedications />} />
+                    <Route path="/inventory/report" element={<DrugReport />} />
+                    <Route path="/staff" element={<StaffPage />} />
+                  </Routes>
+                </>
+              </ProtectedRoute>
+            }
+          />
 
         </Routes>
       </div>

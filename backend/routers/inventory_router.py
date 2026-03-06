@@ -196,3 +196,124 @@ async def delete_stock(inv_id: int, db: AsyncSession = Depends(get_db)):
     await db.delete(stock)
     await db.commit()
     return {"status": "success", "message": f"Stock entry {inv_id} deleted"}
+
+
+# Report 
+
+@router.get("/report", summary="Get drug in report by time range")
+async def get_report(range: str = "30d", db: AsyncSession = Depends(get_db)):
+    from datetime import datetime, timedelta
+
+    today = datetime.now().date()
+
+    range_map = {
+        "7d": today - timedelta(days=7),
+        "15d": today - timedelta(days=15),
+        "30d": today - timedelta(days=30),
+        "3m": today - timedelta(days=90),
+        "6m": today - timedelta(days=180),
+        "1y": today - timedelta(days=365),
+        "all": None
+    }
+
+    start_date = range_map.get(range, today - timedelta(days=30))
+
+    if start_date:
+        result = await db.execute(
+            select(Inventory, Medication)
+            .join(Medication, Inventory.med_id == Medication.med_id)
+            .where(Inventory.in_day >= start_date)
+        )
+    else:
+        result = await db.execute(
+            select(Inventory, Medication)
+            .join(Medication, Inventory.med_id == Medication.med_id)
+        )
+
+    rows = result.all()
+
+    med_map = {}
+    for inv, med in rows:
+        if med.med_id not in med_map:
+            med_map[med.med_id] = {
+                "med_id": med.med_id,
+                "name": med.name,
+                "total_quantity_in": 0,
+                "total_price_in": 0,
+            }
+        med_map[med.med_id]["total_quantity_in"] += inv.quantity
+        med_map[med.med_id]["total_price_in"] += inv.quantity * med.price
+
+    return {
+        "range": range,
+        "start_date": str(start_date) if start_date else "all time",
+        "end_date": str(today),
+        "data": list(med_map.values())
+    }
+
+
+# Dashboard Endpoint
+
+@router.get("/dashboard", summary="Get dashboard summary stats")
+async def get_dashboard(db: AsyncSession = Depends(get_db)):
+    from datetime import datetime, timedelta
+
+    today = datetime.now().date()
+    thirty_days = today + timedelta(days=30)
+
+    # total meds
+    med_result = await db.execute(select(Medication))
+    meds = med_result.scalars().all()
+    total_meds = len(meds)
+
+    # all
+    inv_result = await db.execute(select(Inventory))
+    stocks = inv_result.scalars().all()
+
+    total_stock = sum(s.quantity for s in stocks)
+    expired_count = sum(1 for s in stocks if s.exp_day < today)
+    expiring_soon_count = sum(1 for s in stocks if today <= s.exp_day <= thirty_days)
+    out_of_stock = sum(1 for s in stocks if s.quantity == 0)
+
+    # total value
+    inv_value_result = await db.execute(
+        select(Inventory, Medication).join(Medication, Inventory.med_id == Medication.med_id)
+    )
+    total_value = sum(inv.quantity * med.price for inv, med in inv_value_result.all())
+
+    # recent stock 
+    week_ago = today - timedelta(days=7)
+    recent_result = await db.execute(
+        select(Inventory, Medication)
+        .join(Medication, Inventory.med_id == Medication.med_id)
+        .where(Inventory.in_day >= week_ago)
+        .order_by(Inventory.in_day.desc())
+    )
+    recent = [
+        {
+            "name": med.name,
+            "quantity": inv.quantity,
+            "in_day": str(inv.in_day),
+            "price": med.price,
+        }
+        for inv, med in recent_result.all()
+    ]
+
+    # low stock meds 
+    med_stock_map = {}
+    for s in stocks:
+        med_stock_map[s.med_id] = med_stock_map.get(s.med_id, 0) + s.quantity
+    
+    low_stock_ids = [mid for mid, qty in med_stock_map.items() if 0 < qty < 10]
+    low_stock_meds = [{"med_id": m.med_id, "name": m.name, "total_qty": med_stock_map.get(m.med_id, 0)} for m in meds if m.med_id in low_stock_ids]
+
+    return {
+        "total_medications": total_meds,
+        "total_stock_units": total_stock,
+        "total_inventory_value": total_value,
+        "expired_entries": expired_count,
+        "expiring_soon": expiring_soon_count,
+        "out_of_stock_entries": out_of_stock,
+        "recent_stock_in": recent,
+        "low_stock_medications": low_stock_meds,
+    }
