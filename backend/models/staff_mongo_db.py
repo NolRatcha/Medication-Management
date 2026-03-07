@@ -1,7 +1,7 @@
 from beanie import Document
 from mongoengine import DateTimeField
 from typing import Optional
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timezone
 from pydantic import Field
 from enum import Enum
 
@@ -19,11 +19,11 @@ class StaffAuth(Document):
         name = "staff_auth"
 
 class EventLog(Document):
-    event_id: int
     staff_id: int
-    date: datetime = DateTimeField(default = lambda: datetime.now(UTC))
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     action: Optional[str] = None
     description: Optional[str] = None
+    visibility: Optional[list[Role]] = None
 
     class Settings:
         name = "event_log"
