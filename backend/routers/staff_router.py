@@ -62,7 +62,7 @@ async def get_logs(current_user: StaffAuth = Depends(get_current_user)):
 
     logs = await EventLog.find({
         "$or": [
-            {"visibility": None},           # public logs
+            {"visibility": None},
             {"visibility": {"$in": user_perm}}
         ]
     }).sort("-date").to_list()
