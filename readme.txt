@@ -1,6 +1,9 @@
 ลิ้งค์ ไฟล์สรุปข้อมูล database
 https://docs.google.com/document/d/1wricOoPUAKSJ5wBYya2PEm1OgCQOpMpJ4VqYSbHiiNw/edit?usp=sharing
 
+ลิ้งค์ คลิปอธิยาย
+https://youtu.be/rDISuk_C8DM?si=nDull54tzLZke872
+
 Healthcare Management System
   ระบบนี้ถูกสร้างขึ้นมาเพื่อให้พนักงานใน clinic ใช้ในการตรวจสอบและติดตามช้อมูลคนไข้ได้ง่าย
 
