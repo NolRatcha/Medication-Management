@@ -1,4 +1,4 @@
-ลิ้งค์ ไฟล์สรุปข้อมูล database แก้ได้
+ลิ้งค์ ไฟล์สรุปข้อมูล database
 https://docs.google.com/document/d/1wricOoPUAKSJ5wBYya2PEm1OgCQOpMpJ4VqYSbHiiNw/edit?usp=sharing
 
 Healthcare Management System
