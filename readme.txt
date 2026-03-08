@@ -1,22 +1,182 @@
-ผมเพิ่มตัวโครงเริ่มต้นไปแล้วครับ น่าจะรันได้? ถ้าจะเริ่มทำงานก็แยก branch ออกมาแล้วเขียน frontend backend ได้เลย 
-ผมลองใช้ 
-frontend เป็น React
-backend เป็น python FastAPI
-ถ้าใช้อย่างอื่นก็เปลี่ยนได้ครับ
-
-#############################################################################
-เพิ่ม Login Logout ให้ละน่าจะใช้ได้ไม่ติดไร
-Set ให้เข้าหน้าหลักไม่ได้ถ้าไม่ได้ Login และถ้า Login แล้วจะเข้าหน้า Register กับ Login ไม่ได้ละ
--Nol
-
-#############################################################################
-เพิ่มระบบ Admin และ Permission เรียบร้อย(ปวดหัวมากๆ ทำทั้งวัน)
-มีการเปลี่ยนโครงสร้าง Schema ของ staff_auth จาก str -> list[str] แนะนำให้ docker-compose down -v เพื่อล้างข้อมูลที้งให้หมดก่อน
-สามารถสร้าง Admin ได้ด้วยการ run "python create_admin.py" ถ้าในระบบมี Admin อยู่แล้วตัว "create_admin" จะปิดโดยทันทีพร้อมแจ้งว่า "✅ Admin already exists."
-
-ถ้า log in ด้วย account admin จะสามารถเข้า tab "Admin Panel" ได้ผู้ใช้ธรรมดาเข้าไม่ได้ สามารถไปเพิ่ม Permission ให้ Staff ต่างๆได้
-สำหรับการเพิ่ม Permission อย่างเช่นจะเพื่ม หน้าที่"Pharmacist" สามารถเข้าไปที่ staff_auth แล้วหา class Role แล้วเพิ่มลงไปได้เลย ถ้าไม่มีอะไรผิดพลาดน่าจะเพิ่มให้ใน panel อัตโนมัติ
-
-#############################################################################
 ลิ้งค์ ไฟล์สรุปข้อมูล database แก้ได้
 https://docs.google.com/document/d/1wricOoPUAKSJ5wBYya2PEm1OgCQOpMpJ4VqYSbHiiNw/edit?usp=sharing
+
+Healthcare Management System
+  ระบบนี้ถูกสร้างขึ้นมาเพื่อให้พนักงานใน clinic ใช้ในการตรวจสอบและติดตามช้อมูลคนไข้ได้ง่าย
+
+--เครื่องมือที่ใช้--
+Backend
+  -Python
+  -FastAPI
+  -SQLAlchemy
+  -Beanie
+  -Pydynamic
+
+Frontend
+  -React
+  -Axios
+
+Databases
+  -PostgreSQL
+  -MongoDB
+
+Infrastructure
+  -Docker
+
+--การใช้งาน--
+Docker
+  run คำสั่ง
+  docker-compose up -d
+  
+  เมื่อใช้เสร็จ run
+  docker-compose down
+
+Backend
+  เข้าไปใน folder backend แล้วใข้คำสั่ง
+  venv\scripts\activate
+  แล้วลง requirment ทั้งหมด
+  pip install -r requirement.txt
+  จึงสามารถใช้งานตัว application หลักได้
+  python main.py
+
+คำสั่งเพิ่มเติม
+  คำสั่งสร้าง user admin
+  python create-admin.py
+  สามารถมี admin ได้แค่ 1 คนต่อระบบเท่านั้น
+
+Frontend
+  เข้าไปใน folder frontend แล้วใช้คำสั่ง
+  npm install
+  เพื่อเตรียมตัว frontend
+  แล้ว run
+  npm run
+  เพื่อเปิดตัว website
+
+--Schemas--
+PostgresSQL
+Staff
+| Field    | Type            | Description     |
+| -------- | --------------- | --------------- |
+| staff_id | BigInteger (PK) | Staff ID        |
+| username | String          | Login username  |
+| password | String          | Hashed password |
+| name     | String          | Staff full name |
+| role     | String          | Work role       |
+
+Patient
+| Field      | Type            | Description      |
+| ---------- | --------------- | ---------------- |
+| p_id       | BigInteger (PK) | Patient ID       |
+| name       | String          | Patient name     |
+| citizen_id | String          | National ID      |
+| password   | String          | Patient password |
+| age        | BigInteger      | Age              |
+| gender     | String          | Gender           |
+| doctor_id  | FK              | Assigned doctor  |
+| is_deleted | Boolean         | Soft delete flag |
+
+Treatment
+| Field    | Type            | Description       |
+| -------- | --------------- | ----------------- |
+| t_id     | BigInteger (PK) | Treatment ID      |
+| p_id     | FK              | Patient ID        |
+| med_id   | FK              | Medication ID     |
+| amount   | BigInteger      | Amount prescribed |
+| date     | Date            | Treatment date    |
+| exp_date | Date            | Expiration date   |
+
+Medication Table
+| Field       | Type            | Description     |
+| ----------- | --------------- | --------------- |
+| med_id      | BigInteger (PK) | Medication ID   |
+| name        | String          | Medication name |
+| common_name | String          | Generic name    |
+| price       | BigInteger      | Price per unit  |
+
+Inventory Table
+| Field    | Type            | Description        |
+| -------- | --------------- | ------------------ |
+| inv_id   | BigInteger (PK) | Inventory ID       |
+| med_id   | FK              | Medication ID      |
+| in_day   | Date            | Stock arrival date |
+| exp_day  | Date            | Expiration date    |
+| quantity | BigInteger      | Quantity available |
+
+StockLog Table
+| Field          | Type            | Description    |
+| -------------- | --------------- | -------------- |
+| log_id         | BigInteger (PK) | Log ID         |
+| med_id         | FK              | Medication ID  |
+| quantity       | BigInteger      | Quantity added |
+| price_per_unit | BigInteger      | Purchase price |
+| log_date       | Date            | Log date       |
+
+MongoDB
+StaffAuth
+Role{Admin,Doctor,Pharmacist}
+| Field       | Type      |
+| ----------- | --------- |
+| staff_id    | int       |
+| permission  | Role(enum)|
+EventLog
+| Field       | Type     |
+| ----------- | -------- |
+| staff_id    | int      |
+| date        | datetime |
+| action      | string   |
+| description | string   |
+| visibility  | list     |
+
+MedInfo
+| Field     | Type   |
+| --------- | ------ |
+| med_id    | int    |
+| guideline | string |
+| warning   | string |
+
+Patient History
+| Field      | Type   |
+| ---------- | ------ |
+| p_id       | int    |
+| history    | string |
+| diagnosis  | list   |
+| medication | list   |
+| allergies  | list   |
+| image_url  | string |
+
+--Application Pages--
+Login Page 
+  ใช้ในการ Login
+
+Register Page
+  ใช้ในการสร้าง user ใหม่
+
+Patient Page
+  ใช้ในการเพิ่มคนไข้
+    -Patient File Page
+      ใช้ในการเพิ่มประวัติคนไข้,ข้อมูลคนไข้และการจ่ายยา
+
+Add Medication Page
+  ใช้เพิ่มประเภทยาและราคายาตัวนั้น
+
+Add Stock Page
+  ใช้เพิ่มปริมาณยาในคลังพร้อมกรอกวันหมดอายุและจำนวน
+
+Add Med Info Page
+  ใช้เพิ่มข้อมูลของยาทั้งการใช้และอันตราย
+
+View Medications Page
+  ใช้ในการตรวจสอบจำนวนยาที่เหลือในคลัง
+
+Drug Report Page
+  ใช้ในการแสดงการเข้าออกของยา
+
+Staffs Page
+  ใช้แสดง user ทั้งหมดในระบบพร้อมความสามารถในการเข้าถึงข้อมูลต่างๆ
+
+Logs Page
+  แสดงข้อว่าพนักงานคนไหน,ทำอะไร,รายละเอียดคืออะไรและเกิดขึ้นวันที่เท่าไหร่
+
+Admin Panel Page
+  หน้าที่เข้าถึงได้แค่ Admin เท่านั้น
+  ใช้เพิ่ม Permission ให้กับ User ในระบบ
