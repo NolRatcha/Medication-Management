@@ -35,6 +35,7 @@ async def test_create_patient_success(client):
     }
     response = await client.post("/api/v1/patients/", json=payload)
     data = response.json()
+    assert response.status_code == 201, f"API Error: {response.text}"
     assert data["name"] == "Great Patient"
     assert "p_id" in data
 
