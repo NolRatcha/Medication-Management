@@ -14,8 +14,8 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
+          POSTGRES_USER: clinic_user
+          POSTGRES_PASSWORD: clinic_password
           POSTGRES_DB: clinic_db
         ports:
           - 5432:5432
@@ -51,8 +51,8 @@ jobs:
       - name: Run Pytest
         working-directory: ./backend
         env:
+          POSTGRES_URL: "postgresql+asyncpg://clinic_user:clinic_password@localhost:5432/clinic_db"
           MONGO_URL: "mongodb://admin:adminpassword@localhost:27017"
-          POSTGRES_URL: "postgresql://user:password@localhost:5432/clinic_db"
           SECRET_KEY: "test-secret-key"
         run: |
           pytest tests/test_patients.py
