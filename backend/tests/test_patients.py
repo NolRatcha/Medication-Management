@@ -24,8 +24,8 @@ async def client():
             try:
 
                 await conn.execute(text("""
-                    INSERT INTO staff (staff_id,name,email,password,permission) 
-                    VALUES (1, 'John Doe', 'john.doe@example.com', 'password123', 'doctor') 
+                    INSERT INTO staff (staff_id,username,password,name,role) 
+                    VALUES (1, 'John Doe', 'password123', 'John Doe', 'doctor') 
                     ON CONFLICT DO NOTHING;
                 """))
             except Exception as e:
