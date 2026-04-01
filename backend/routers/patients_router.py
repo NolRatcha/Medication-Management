@@ -376,7 +376,7 @@ async def create_patient(
     except Exception as e:
         await db.rollback()
         print(f"Error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Cannot create patient")
+        raise HTTPException(status_code=500, detail=f"Cannot create patient: {str(e)}")
     return patient
 
 

@@ -29,7 +29,7 @@ async def client():
                     ON CONFLICT DO NOTHING;
                 """))
             except Exception as e:
-                print(f"cannot add doctor: {str(e)}")
+                pytest.fail(f"SQL Mock Doctor Failed: {str(e)}")
 
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             yield ac
