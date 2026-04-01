@@ -2,9 +2,12 @@ import pytest
 import pytest_asyncio
 import random 
 from httpx import AsyncClient, ASGITransport
+from sqlalchemy import text
 
 from main import app, lifespan 
+from database import engine
 from routers.patients_router import get_current_user_token, require_doctor, require_doctor_or_pharmacist
+
 
 async def mock_doctor_user():
     return {"id": 1, "role": "doctor"}
@@ -17,10 +20,22 @@ async def client():
     app.dependency_overrides[require_doctor_or_pharmacist] = mock_doctor_user
 
     async with lifespan(app):
+        async with engine.begin() as conn:
+            try:
+
+                await conn.execute(text("""
+                    INSERT INTO staff (staff_id) 
+                    VALUES (1) 
+                    ON CONFLICT DO NOTHING;
+                """))
+            except Exception as e:
+                print(f"cannot add doctor: {str(e)}")
+
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             yield ac
     
     app.dependency_overrides.clear()
+    
 
 @pytest.mark.asyncio
 async def test_create_patient_success(client):
