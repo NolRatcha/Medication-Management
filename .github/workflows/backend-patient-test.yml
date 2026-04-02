@@ -55,4 +55,4 @@ jobs:
           MONGO_URL: "mongodb://admin:adminpassword@localhost:27017"
           SECRET_KEY: "test-secret-key"
         run: |
-          pytest tests/test_patients.py
+          pytest tests/test_patients.py tests/test_medication.py
