@@ -42,8 +42,7 @@ app = FastAPI(
 
 origins = [
     "http://localhost:5173",
-    # Add your deployed frontend URL here after deployment
-    # "https://your-frontend.vercel.app",
+    "https://medication-management-zeta.vercel.app",
 ]
 
 app.add_middleware(
