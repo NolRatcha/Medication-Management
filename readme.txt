@@ -34,6 +34,9 @@ Databases
 
 Infrastructure
   -Docker
+Deployment
+  -google cloud run (backend)
+  -vercel (frontend)
 
 --การใช้งาน--
 Docker
@@ -162,6 +165,9 @@ Login Page
 
 Register Page
   ใช้ในการสร้าง user ใหม่
+
+Home Page
+  view dash board
 
 Patient Page
   ใช้ในการเพิ่มคนไข้
